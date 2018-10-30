@@ -30,3 +30,13 @@ BEGIN
 	dbms_output.put_line('Infirmier supprimé');
 END;
 delete from infirmier where num_inf=0;
+
+/*Creation d'un trigger qui affiche « un nouveau infirmier est affecté à un [Nom de service] » après chaque insertion d’un infirmier.*/
+CREATE OR REPLACE TRIGGER Affectation_inf
+AFTER INSERT
+   ON infirmier
+   FOR EACH ROW
+BEGIN 
+	dbms_output.put_line('un nouveau infirmier est affecté a '||:new.code_service);
+END;
+insert into infirmier values(0,'CAR','JOUR',4780);
