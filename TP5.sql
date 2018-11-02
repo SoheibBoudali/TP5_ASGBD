@@ -95,14 +95,14 @@ SET salaire=0 WHERE num_inf=0;
 	 Pour cela, il ajoute un attribut : total_salaire_service dans la table service. */
 ALTER TABLE service ADD total_salaire float DEFAULT 0 ;
 UPDATE service S
-SET total_salaire=(SELECT SUM(salaire) from infirmier I WHERE I.code_service=S.code_service);
+SET total_salaire=(SELECT SUM(salaire) FROM infirmier I WHERE I.code_service=S.code_service);
 
 CREATE OR REPLACE TRIGGER TotalSalaire_Serivce_trigger
 	AFTER INSERT ON infirmier 
 	FOR EACH ROW
 BEGIN
 	UPDATE service S
-	SET total_salaire= total_salaire+:new.salaire where S.code_service=:new.code_service;
+	SET total_salaire= total_salaire+:new.salaire WHERE S.code_service=:new.code_service;
 END;
 INSERT INTO infirmier VALUES(0,'CAR','JOUR',1000);
 
@@ -111,7 +111,20 @@ CREATE OR REPLACE TRIGGER TotalSalaireUpdate_trigger
 	FOR EACH ROW
 BEGIN
 	UPDATE service S
-	SET total_salaire= total_salaire-:old.salaire+:new.salaire where S.code_service=:new.code_service;
+	SET total_salaire= total_salaire-:old.salaire+:new.salaire WHERE S.code_service=:new.code_service;
 END;
 UPDATE infirmier
 SET salaire=3000 WHERE num_inf=0;
+
+/* 6 Un infirmier peut changer de service. Créer un trigger qui mit à jour l’attribut total_salaire_service des deux services.*/
+CREATE OR REPLACE TRIGGER total_salaire_service
+ 	AFTER UPDATE OF code_service ON infirmier
+ 	FOR EACH ROW
+BEGIN
+	UPDATE service S
+	SET total_salaire=total_salaire-:old.salaire WHERE S.code_service=:old.code_service;
+	UPDATE service S
+	SET total_salaire=total_salaire+:new.salaire WHERE S.code_service=:new.code_service;
+END;
+UPDATE infirmier
+SET code_service='CHG' WHERE num_inf=0; 
