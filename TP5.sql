@@ -116,7 +116,7 @@ END;
 UPDATE infirmier
 SET salaire=3000 WHERE num_inf=0;
 
-/* 6 Un infirmier peut changer de service. Créer un trigger qui mit à jour l’attribut total_salaire_service des deux services.*/
+/* 6 Création un trigger qui mit à jour l’attribut total_salaire_service des deux services.*/
 CREATE OR REPLACE TRIGGER total_salaire_service
  	AFTER UPDATE OF code_service ON infirmier
  	FOR EACH ROW
@@ -128,3 +128,23 @@ BEGIN
 END;
 UPDATE infirmier
 SET code_service='CHG' WHERE num_inf=0; 
+
+/* 7 L’administrateur veut sauvegarder toutes les hospitalisations des patients dans le temps.*/
+CREATE TABLE Hist_Hospit (
+	date_hospit date,
+	num_patient integer,
+	code_service varchar(10),
+	CONSTRAINT pk_hist_hospit PRIMARY KEY (date_hospit,num_patient,code_service),
+	CONSTRAINT fk_pathost FOREIGN KEY (num_patient) REFERENCES patient (num_patient),
+	CONSTRAINT fk_serhost FOREIGN KEY (code_service) REFERENCES service (code_service)
+);
+CREATE OR REPLACE TRIGGER Host
+	AFTER INSERT ON hospitalisation
+	FOR EACH ROW
+BEGIN
+	INSERT INTO Hist_Hospit VALUES(:new.date_host,:new.num_patient,:new.code_service);
+END;
+
+INSERT INTO hospitalisation VALUES (13,'CAR',101,1,'02/11/2018');
+
+/* FIN /
