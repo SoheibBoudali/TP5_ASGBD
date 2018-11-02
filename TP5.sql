@@ -78,7 +78,7 @@ SET code_service='XXX' WHERE num_inf=0;
 
 /*4. Création d'un trigger qui vérifie que lors de la modification du salaire d’un infirmier,
  la nouvelle valeur ne peut jamais être inférieure à la précédente.*/
- 
+
 CREATE OR REPLACE TRIGGER Update_salaire 
 	BEFORE UPDATE OF salaire ON infirmier 
   	FOR EACH ROW
@@ -90,3 +90,28 @@ END;
 
 UPDATE infirmier
 SET salaire=0 WHERE num_inf=0;
+
+/* 5 L’administrateur veut, pour un besoin interne, avoir le total des salaires infirmiers pour chaque service.
+	 Pour cela, il ajoute un attribut : total_salaire_service dans la table service. */
+ALTER TABLE service ADD total_salaire float DEFAULT 0 ;
+UPDATE service S
+SET total_salaire=(SELECT SUM(salaire) from infirmier I WHERE I.code_service=S.code_service);
+
+CREATE OR REPLACE TRIGGER TotalSalaire_Serivce_trigger
+	AFTER INSERT ON infirmier 
+	FOR EACH ROW
+BEGIN
+	UPDATE service S
+	SET total_salaire= total_salaire+:new.salaire where S.code_service=:new.code_service;
+END;
+INSERT INTO infirmier VALUES(0,'CAR','JOUR',1000);
+
+CREATE OR REPLACE TRIGGER TotalSalaireUpdate_trigger
+	AFTER UPDATE ON infirmier 
+	FOR EACH ROW
+BEGIN
+	UPDATE service S
+	SET total_salaire= total_salaire-:old.salaire+:new.salaire where S.code_service=:new.code_service;
+END;
+UPDATE infirmier
+SET salaire=3000 WHERE num_inf=0;
