@@ -75,3 +75,18 @@ BEGIN
 END;
 UPDATE infirmier 
 SET code_service='XXX' WHERE num_inf=0;
+
+/*4. Création d'un trigger qui vérifie que lors de la modification du salaire d’un infirmier,
+ la nouvelle valeur ne peut jamais être inférieure à la précédente.*/
+ 
+CREATE OR REPLACE TRIGGER Update_salaire 
+	BEFORE UPDATE OF salaire ON infirmier 
+  	FOR EACH ROW
+BEGIN 
+   	IF(:new.salaire < :old.salaire) THEN
+   		raise_application_error(-20000,'ATTENTION LE NOUVEAU SALAIRE EST INFERIEUR A LANCIEN  MODIFICATION IMPOSSIBLE');
+    END IF;
+END;
+
+UPDATE infirmier
+SET salaire=0 WHERE num_inf=0;
